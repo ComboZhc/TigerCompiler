@@ -6,20 +6,28 @@ import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
+import com.sun.org.apache.xml.internal.utils.NameSpace;
 
 import Antlr.Tiger.TigerBaseListener;
 import Antlr.Tiger.TigerParser;
 import Antlr.Tiger.TigerParser.ArrayInitializerContext;
 import Antlr.Tiger.TigerParser.AssignExprContext;
+import Antlr.Tiger.TigerParser.BreakExprContext;
 import Antlr.Tiger.TigerParser.ExprContext;
 import Antlr.Tiger.TigerParser.ExprListContext;
 import Antlr.Tiger.TigerParser.ExprsContext;
 import Antlr.Tiger.TigerParser.ForExprContext;
+import Antlr.Tiger.TigerParser.ForIDContext;
 import Antlr.Tiger.TigerParser.FuncExprContext;
 import Antlr.Tiger.TigerParser.IfExprContext;
 import Antlr.Tiger.TigerParser.InitFieldContext;
 import Antlr.Tiger.TigerParser.InitFieldsContext;
+import Antlr.Tiger.TigerParser.LetExprContext;
+import Antlr.Tiger.TigerParser.LvalueContext;
 import Antlr.Tiger.TigerParser.MethodExprContext;
 import Antlr.Tiger.TigerParser.NegateExprContext;
 import Antlr.Tiger.TigerParser.NewExprContext;
@@ -235,6 +243,16 @@ public class TigerStandardListener extends TigerBaseListener {
 			error(ctx, "TypeID " + symbol + " is not defind");
 		}
 	}
+	
+	@Override
+	public void exitInitField(InitFieldContext ctx) {
+		assign(ctx, NOVALUE);
+	}
+	
+	@Override
+	public void exitInitFields(InitFieldsContext ctx) {
+		assign(ctx, NOVALUE);
+	}
 
 	@Override
 	public void exitNegateExpr(NegateExprContext ctx) {
@@ -311,46 +329,43 @@ public class TigerStandardListener extends TigerBaseListener {
 	@Override
 	public void exitIfExpr(IfExprContext ctx) {
 		TigerType conditionType = eval(ctx.expr(0));
-		if (conditionType.equals(INTEGER)) {
-			if (ctx.ELSE() != null) {
-				TigerType leftBranchType = eval(ctx.expr(1));
-				TigerType rightBranchType = eval(ctx.expr(2));
-				if (leftBranchType.equals(rightBranchType)) {
-					// PASS
-					assign(ctx, leftBranchType);
-				} else {
-					warning(ctx, "Branches types mismatch");
-					assign(ctx, leftBranchType);
-				}
+		if (!conditionType.equals(INTEGER)) {
+			error(ctx, "Condition should be " + INTEGER);
+		} else if (ctx.ELSE() != null) {
+			TigerType leftBranchType = eval(ctx.expr(1));
+			TigerType rightBranchType = eval(ctx.expr(2));
+			if (leftBranchType.equals(rightBranchType)) {
+				// PASS
+				assign(ctx, leftBranchType);
 			} else {
-				TigerType branchType = eval(ctx.expr(1));
-				if (branchType.equals(NOVALUE)) {
-					// PASS
-					assign(ctx, NOVALUE);
-				} else {
-					warning(ctx, "Branch should be " + NOVALUE);
-					assign(ctx, NOVALUE);
-				}
+				warning(ctx, "Branches types mismatch");
+				assign(ctx, leftBranchType);
 			}
 		} else {
-			error(ctx, "Condition should be " + INTEGER);
+			TigerType branchType = eval(ctx.expr(1));
+			if (branchType.equals(NOVALUE)) {
+				// PASS
+				assign(ctx, NOVALUE);
+			} else {
+				warning(ctx, "Branch should be " + NOVALUE);
+				assign(ctx, NOVALUE);
+			}
 		}
 	}
 	
 	@Override
 	public void exitWhileExpr(WhileExprContext ctx) {
 		TigerType conditionType = eval(ctx.expr(0));
-		if (conditionType.equals(INTEGER)) {
-			TigerType bodyType = eval(ctx.expr(1));
-			if (bodyType.equals(NOVALUE)) {
-				assign(ctx, NOVALUE);
-			} else {
-				warning(ctx, "Loop body should be " + NOVALUE);
-				assign(ctx, NOVALUE);
-			}
-		} else {
+		TigerType bodyType = eval(ctx.expr(1));
+		if (!conditionType.equals(INTEGER)) {
 			error(ctx, "Condition should be " + INTEGER);
+		} else if (!bodyType.equals(NOVALUE)) {
+			warning(ctx, "Loop body should be " + NOVALUE);
+			assign(ctx, NOVALUE);
+		} else {
+			assign(ctx, NOVALUE);
 		}
+			
 	}
 	
 	@Override
@@ -358,19 +373,67 @@ public class TigerStandardListener extends TigerBaseListener {
 		pushTable();
 	}
 	
+	
 	@Override
 	public void exitForExpr(ForExprContext ctx) {
+		TigerType lowerBoundType = eval(ctx.expr(0));
+		TigerType upperBoundType = eval(ctx.expr(1));
+		TigerType bodyType = eval(ctx.expr(2));
+		if (!lowerBoundType.equals(INTEGER)) {
+			error(ctx.expr(0), "Lowerbound should be " + INTEGER);
+		} else if (!upperBoundType.equals(INTEGER)) {
+			error(ctx.expr(1), "Upperbound should be " + INTEGER);
+		} else if (!bodyType.equals(NOVALUE)) {
+			error(ctx.expr(2), "Body should be " + NOVALUE);
+		} else {
+			// PASS
+			assign(ctx, NOVALUE);
+		}
 		popTable();
 	}
-
+	
 	@Override
-	public void exitInitField(InitFieldContext ctx) {
-		assign(ctx, NOVALUE);
+	public void exitForID(ForIDContext ctx) {
+		currentTable().put(ctx.ID().getText(), INTEGER);
 	}
 
 	@Override
-	public void exitInitFields(InitFieldsContext ctx) {
+	public void exitBreakExpr(BreakExprContext ctx) {
+		ParserRuleContext parent = ctx;
+		boolean insideLoop = false;
+		while (parent != null) {
+			parent = parent.getParent();
+			if (parent instanceof WhileExprContext || parent instanceof ForExprContext) {
+				insideLoop = true;
+				break;
+			}
+		}
 		assign(ctx, NOVALUE);
+	}
+	
+	@Override
+	public void enterLetExpr(LetExprContext ctx) {
+		pushTable();
+	}
+	
+	@Override
+	public void exitLvalue(LvalueContext ctx) {
+		Map<String, TigerNamespace> table = visibleTable();
+		String key = ctx.ID(0).getText();
+		TigerType root = null;
+		if (table.containsKey(key) && table.get(key) instanceof TigerVariable)
+			root = ((TigerVariable)table.get(key)).getType();
+		for (int i = 1; i < ctx.getChildCount(); i++) {
+			ParseTree parseTree = ctx.getChild(i);
+			if (parseTree instanceof TerminalNode) {
+				TerminalNode terminalNode = (TerminalNode)parseTree;
+			}
+		}
+	}
+	
+	@Override
+	public void exitLetExpr(LetExprContext ctx) {
+		popTable();
 	}
 
 	@Override

@@ -26,6 +26,8 @@ expr : expr (MUL | DIV) expr
     | letExpr;
 arrayInitializer : typeID LSQR expr RSQR OF expr;
 typeInitializer : typeID LBCE initFields RBCE;
+initFields : (initField (COMMA initField)*)?;
+initField : ID EQ expr;
 negateExpr : MINUS expr;
 newExpr : NEW typeID;
 sequenceExpr : LPAR exprs RPAR;
@@ -39,8 +41,6 @@ forExpr : FOR forID ASSIGN expr TO expr DO expr;
 forID : ID;
 breakExpr : BREAK;
 letExpr : LET decs IN exprs END;
-initFields : (initField (COMMA initField)*)?;
-initField : ID EQ expr;
 lvalue : ID ((DOT ID) | LSQR expr RSQR)* ;
 
 decs : dec* ;
