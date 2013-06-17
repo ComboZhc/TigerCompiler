@@ -76,17 +76,24 @@ public class TigerStandardListener extends TigerBaseListener {
 		return table;
 	}
 	
+	private void pushTable() {
+		tables.add(new HashMap<String, TigerNamespace>());
+	}
+	
+	private void popTable() {
+		tables.remove(tables.size() - 1);
+	}
+	
 	@Override
 	public void enterProgram(ProgramContext ctx) {
-		HashMap<String, TigerNamespace> map = new HashMap<String, TigerNamespace>();
-		map.put("int", INTEGER);
-		map.put("string", STRING);
-		this.tables.add(map);
+		pushTable();
+		currentTable().put("int", INTEGER);
+		currentTable().put("string", STRING);
 	}
 	
 	@Override
 	public void exitProgram(ProgramContext ctx) {
-		this.tables.remove(this.tables.size() - 1);
+		popTable();
 	}
 	
 	@Override
@@ -348,12 +355,12 @@ public class TigerStandardListener extends TigerBaseListener {
 	
 	@Override
 	public void enterForExpr(ForExprContext ctx) {
-		
+		pushTable();
 	}
 	
 	@Override
 	public void exitForExpr(ForExprContext ctx) {
-		
+		popTable();
 	}
 
 	@Override
