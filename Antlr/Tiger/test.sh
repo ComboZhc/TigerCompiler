@@ -1,0 +1,1 @@
+java org.antlr.v4.runtime.misc.TestRig Tiger program $1.tig -tree

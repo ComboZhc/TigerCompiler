@@ -2,13 +2,12 @@ grammar Tiger;
 program : expr | decs;
 exprList : (expr (COMMA expr)*)?;
 exprs : (expr (SEMI expr)*)?;
-relOp : EQ | NEQ | LT | LE | GT | GE;
-expr : exprOr (OR expr)?;
-exprOr : exprAnd (AND exprOr)?;
-exprAnd : arith (relOp arith)?;
-arith : term ((PLUS | MINUS) arith)?;
-term: factor ((MUL | DIV) term)?;
-factor : NIL
+expr : expr (MUL | DIV) expr
+    | expr (PLUS | MINUS) expr
+    | expr (EQ | NEQ | LT | LE | GT | GE) expr
+    | expr AND expr
+    | expr OR expr
+    | NIL
     | INT
     | STRING
     | arrayInitializer
@@ -30,13 +29,14 @@ typeInitializer : typeID LBCE initFields RBCE;
 negateExpr : MINUS expr;
 newExpr : NEW typeID;
 sequenceExpr : LPAR exprs RPAR;
-assignExpr : lvalue ASSIGN expr?;
+assignExpr : lvalue ASSIGN expr;
 valueExpr : lvalue;
 funcExpr : ID LPAR exprList RPAR;
 methodExpr : lvalue DOT ID LPAR exprList RPAR;
 ifExpr : IF expr THEN expr (ELSE expr)?;
 whileExpr : WHILE expr DO expr;
-forExpr : FOR ID ASSIGN expr TO expr DO expr;
+forExpr : FOR forID ASSIGN expr TO expr DO expr;
+forID : ID;
 breakExpr : BREAK;
 letExpr : LET decs IN exprs END;
 initFields : (initField (COMMA initField)*)?;
@@ -59,10 +59,9 @@ methodDec : METHOD ID LPAR typeFields RPAR (COLON typeID)? EQ expr;
 primitiveDec : PRIMITIVE ID LPAR typeFields RPAR (COLON typeID)? EQ expr;
 importDec : IMPORT STRING;
 
-type : idType
+type : typeID
     | recordType
     | arrayType;
-idType : typeID;
 arrayType : ARRAY OF typeID;
 recordType : LBCE typeFields RBCE;
 typeFields : (typeField (COMMA typeField)*)?;
