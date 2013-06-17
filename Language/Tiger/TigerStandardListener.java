@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.stringtemplate.v4.compiler.STParser.andConditional_return;
 
 import com.sun.org.apache.xml.internal.utils.NameSpace;
 
@@ -17,6 +19,8 @@ import Antlr.Tiger.TigerParser;
 import Antlr.Tiger.TigerParser.ArrayInitializerContext;
 import Antlr.Tiger.TigerParser.AssignExprContext;
 import Antlr.Tiger.TigerParser.BreakExprContext;
+import Antlr.Tiger.TigerParser.DecContext;
+import Antlr.Tiger.TigerParser.DecsContext;
 import Antlr.Tiger.TigerParser.ExprContext;
 import Antlr.Tiger.TigerParser.ExprListContext;
 import Antlr.Tiger.TigerParser.ExprsContext;
@@ -36,6 +40,7 @@ import Antlr.Tiger.TigerParser.SequenceExprContext;
 import Antlr.Tiger.TigerParser.TypeIDContext;
 import Antlr.Tiger.TigerParser.TypeInitializerContext;
 import Antlr.Tiger.TigerParser.ValueExprContext;
+import Antlr.Tiger.TigerParser.VarDecContext;
 import Antlr.Tiger.TigerParser.WhileExprContext;
 
 import static Language.Tiger.TigerType.ARRAY;
@@ -417,23 +422,70 @@ public class TigerStandardListener extends TigerBaseListener {
 	}
 	
 	@Override
+	public void exitLetExpr(LetExprContext ctx) {
+		assign(ctx, eval(ctx.exprs()));
+		popTable();
+	}
+	
+	@Override
 	public void exitLvalue(LvalueContext ctx) {
 		Map<String, TigerNamespace> table = visibleTable();
-		String key = ctx.ID(0).getText();
-		TigerType root = null;
-		if (table.containsKey(key) && table.get(key) instanceof TigerVariable)
-			root = ((TigerVariable)table.get(key)).getType();
+		String rootKey = ctx.ID(0).getText();
+		TigerType rootType = null;
+		String path = rootKey;
+		if (table.containsKey(rootKey) && table.get(rootKey) instanceof TigerVariable)
+			rootType = ((TigerVariable)table.get(rootKey)).getType();
 		for (int i = 1; i < ctx.getChildCount(); i++) {
 			ParseTree parseTree = ctx.getChild(i);
 			if (parseTree instanceof TerminalNode) {
 				TerminalNode terminalNode = (TerminalNode)parseTree;
+				if (terminalNode.getSymbol().getType() == TigerParser.ID) {
+					String idString = terminalNode.getText();
+					if (rootType instanceof TigerRecord) {
+						TigerRecord record = (TigerRecord)rootType;
+						if (record.getElementTypes().containsKey(idString)) {
+							// PASS
+							rootType = record.getElementTypes().get(idString);
+							path += "." + idString;
+						} else {
+							error(ctx, "Record field '" + idString + "' does not exist");
+						}
+					} else {
+						error(ctx, "'" + path + "' must be " + RECORD);
+					}
+				}
+			} else if (parseTree instanceof ParserRuleContext) {
+				ExprContext expr = (ExprContext)parseTree;
+				if (rootType instanceof TigerArray) {
+					TigerArray array = (TigerArray)rootType;
+					if (eval(expr).equals(INTEGER)) {
+						// PASS
+						rootType = array.getElementType();
+						path += "[" + expr.getText() + "]";
+					} else {
+						error(ctx, "Indices must be " + INTEGER);
+					}
+				} else {
+					error(ctx, "'" + path + "' must be " + ARRAY);
+				}
 			}
 		}
+		assign(ctx, rootType);
+	}
+	
+	@Override 
+	public void exitDecs(DecsContext ctx) {
+		assign(ctx, NOVALUE);
 	}
 	
 	@Override
-	public void exitLetExpr(LetExprContext ctx) {
-		popTable();
+	public void exitDec(DecContext ctx) {
+		assign(ctx, NOVALUE);
+	}
+	
+	@Override
+	public void exitVarDec(VarDecContext ctx) {
+		
 	}
 
 	@Override
