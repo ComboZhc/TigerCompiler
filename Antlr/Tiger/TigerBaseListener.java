@@ -19,17 +19,17 @@ public class TigerBaseListener implements TigerListener {
 	@Override public void enterDecs(TigerParser.DecsContext ctx) { }
 	@Override public void exitDecs(TigerParser.DecsContext ctx) { }
 
-	@Override public void enterExpr(TigerParser.ExprContext ctx) { }
-	@Override public void exitExpr(TigerParser.ExprContext ctx) { }
-
 	@Override public void enterInitField(TigerParser.InitFieldContext ctx) { }
 	@Override public void exitInitField(TigerParser.InitFieldContext ctx) { }
 
-	@Override public void enterFuncExpr(TigerParser.FuncExprContext ctx) { }
-	@Override public void exitFuncExpr(TigerParser.FuncExprContext ctx) { }
+	@Override public void enterExpr(TigerParser.ExprContext ctx) { }
+	@Override public void exitExpr(TigerParser.ExprContext ctx) { }
 
 	@Override public void enterAssignExpr(TigerParser.AssignExprContext ctx) { }
 	@Override public void exitAssignExpr(TigerParser.AssignExprContext ctx) { }
+
+	@Override public void enterFuncExpr(TigerParser.FuncExprContext ctx) { }
+	@Override public void exitFuncExpr(TigerParser.FuncExprContext ctx) { }
 
 	@Override public void enterType(TigerParser.TypeContext ctx) { }
 	@Override public void exitType(TigerParser.TypeContext ctx) { }
@@ -112,8 +112,8 @@ public class TigerBaseListener implements TigerListener {
 	@Override public void enterProgram(TigerParser.ProgramContext ctx) { }
 	@Override public void exitProgram(TigerParser.ProgramContext ctx) { }
 
-	@Override public void enterTypeInitializer(TigerParser.TypeInitializerContext ctx) { }
-	@Override public void exitTypeInitializer(TigerParser.TypeInitializerContext ctx) { }
+	@Override public void enterRecordInitializer(TigerParser.RecordInitializerContext ctx) { }
+	@Override public void exitRecordInitializer(TigerParser.RecordInitializerContext ctx) { }
 
 	@Override public void enterMethodExpr(TigerParser.MethodExprContext ctx) { }
 	@Override public void exitMethodExpr(TigerParser.MethodExprContext ctx) { }

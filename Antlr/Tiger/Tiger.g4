@@ -2,7 +2,8 @@ grammar Tiger;
 program : expr | decs;
 exprList : (expr (COMMA expr)*)?;
 exprs : (expr (SEMI expr)*)?;
-expr : expr (MUL | DIV) expr
+expr : negateExpr
+    | expr (MUL | DIV) expr
     | expr (PLUS | MINUS) expr
     | expr (EQ | NEQ | LT | LE | GT | GE) expr
     | expr AND expr
@@ -11,8 +12,7 @@ expr : expr (MUL | DIV) expr
     | INT
     | STRING
     | arrayInitializer
-    | typeInitializer
-    | negateExpr
+    | recordInitializer
     | newExpr
     | sequenceExpr
     | assignExpr
@@ -25,7 +25,7 @@ expr : expr (MUL | DIV) expr
     | breakExpr
     | letExpr;
 arrayInitializer : typeID LSQR expr RSQR OF expr;
-typeInitializer : typeID LBCE initFields RBCE;
+recordInitializer : typeID LBCE initFields RBCE;
 initFields : (initField (COMMA initField)*)?;
 initField : ID EQ expr;
 negateExpr : MINUS expr;
@@ -55,8 +55,7 @@ varDec : VAR ID (COLON typeID)? ASSIGN expr;
 typeDec : TYPE ID EQ type;
 classDec : CLASS ID (EXTENDS ID)? LBCE classFields RBCE;
 funcDec : FUNCTION ID LPAR typeFields RPAR (COLON typeID)? EQ expr;
-methodDec : METHOD ID LPAR typeFields RPAR (COLON typeID)? EQ expr;
-primitiveDec : PRIMITIVE ID LPAR typeFields RPAR (COLON typeID)? EQ expr;
+primitiveDec : PRIMITIVE ID LPAR typeFields RPAR (COLON typeID)?;
 importDec : IMPORT STRING;
 
 type : typeID
@@ -71,6 +70,7 @@ typeID : ID;
 classFields : classField* ;
 classField : varDec
     | methodDec;
+methodDec : METHOD ID LPAR typeFields RPAR (COLON typeID)? EQ expr;
 
 COMMENT: '/*' (COMMENT | ~('*'|'/') | '*'~'/' | '/'~'*')*? '*/' -> skip;
 STRING: '"' (SLASH | ~'\\')*? '"';

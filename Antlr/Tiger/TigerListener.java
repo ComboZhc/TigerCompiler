@@ -16,17 +16,17 @@ public interface TigerListener extends ParseTreeListener {
 	void enterDecs(TigerParser.DecsContext ctx);
 	void exitDecs(TigerParser.DecsContext ctx);
 
-	void enterExpr(TigerParser.ExprContext ctx);
-	void exitExpr(TigerParser.ExprContext ctx);
-
 	void enterInitField(TigerParser.InitFieldContext ctx);
 	void exitInitField(TigerParser.InitFieldContext ctx);
 
-	void enterFuncExpr(TigerParser.FuncExprContext ctx);
-	void exitFuncExpr(TigerParser.FuncExprContext ctx);
+	void enterExpr(TigerParser.ExprContext ctx);
+	void exitExpr(TigerParser.ExprContext ctx);
 
 	void enterAssignExpr(TigerParser.AssignExprContext ctx);
 	void exitAssignExpr(TigerParser.AssignExprContext ctx);
+
+	void enterFuncExpr(TigerParser.FuncExprContext ctx);
+	void exitFuncExpr(TigerParser.FuncExprContext ctx);
 
 	void enterType(TigerParser.TypeContext ctx);
 	void exitType(TigerParser.TypeContext ctx);
@@ -109,8 +109,8 @@ public interface TigerListener extends ParseTreeListener {
 	void enterProgram(TigerParser.ProgramContext ctx);
 	void exitProgram(TigerParser.ProgramContext ctx);
 
-	void enterTypeInitializer(TigerParser.TypeInitializerContext ctx);
-	void exitTypeInitializer(TigerParser.TypeInitializerContext ctx);
+	void enterRecordInitializer(TigerParser.RecordInitializerContext ctx);
+	void exitRecordInitializer(TigerParser.RecordInitializerContext ctx);
 
 	void enterMethodExpr(TigerParser.MethodExprContext ctx);
 	void exitMethodExpr(TigerParser.MethodExprContext ctx);
