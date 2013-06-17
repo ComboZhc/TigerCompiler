@@ -347,6 +347,11 @@ public class TigerStandardListener extends TigerBaseListener {
 	}
 	
 	@Override
+	public void enterForExpr(ForExprContext ctx) {
+		
+	}
+	
+	@Override
 	public void exitForExpr(ForExprContext ctx) {
 		
 	}
