@@ -14,6 +14,5 @@ public class TigerCompiler {
 		ParseTree tree = parser.program();
 		ParseTreeWalker walker = new ParseTreeWalker();
 		walker.walk(new TigerStandardListener(), tree);
-		System.out.println("Perfect!");
 	}
 }

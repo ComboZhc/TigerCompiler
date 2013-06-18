@@ -12,8 +12,10 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.stringtemplate.v4.compiler.CodeGenerator.includeExpr_return;
 import org.stringtemplate.v4.compiler.STParser.andConditional_return;
 
+import com.sun.corba.se.impl.orbutil.graph.Node;
 import com.sun.org.apache.xml.internal.utils.NameSpace;
 
 import Antlr.Tiger.TigerBaseListener;
@@ -71,16 +73,30 @@ public class TigerStandardListener extends TigerBaseListener {
 		this.values = new ParseTreeProperty<TigerType>();
 	}
 
-	private String quote(String string) {
-		return "'" + string + "'";
+	private String quote(Object o) {
+		return "'" + o.toString() + "'";
+	}
+	
+	private String envelope(Object o){
+		return "(" + o.toString() + ")";
+	}
+	
+	private Token getSymbol(ParserRuleContext ctx) {
+		ParseTree tree = ctx;
+		while (!(tree instanceof TerminalNode)) {
+			tree = tree.getChild(0);
+		}
+		TerminalNode node = (TerminalNode)tree;
+		return node.getSymbol();
 	}
 	
 	private void warning(ParserRuleContext ctx, String msg) {
-		System.out.println("Warning@[" + ctx.getText() + "]" + msg);
+		System.out.println("line " + getSymbol(ctx).getLine() + " WARNING: " + msg);
 	}
 	
 	private void error(ParserRuleContext ctx, String msg) {
-		System.out.println("Error@[" + ctx.getText() + "]" + msg);
+		System.out.println("line " + getSymbol(ctx).getLine() + " ERROR: " + msg);
+		System.exit(-1);
 	}
 	
 	private TigerType eval(ParserRuleContext ctx) {
@@ -116,7 +132,7 @@ public class TigerStandardListener extends TigerBaseListener {
 		if (table.get(funcID) instanceof TigerType)
 			return (TigerFunction)table.get(funcID);
 		else  {
-			error(ctx, "'" + funcID + "' must be FUNCTION");
+			error(ctx, quote(funcID) + " must be FUNCTION");
 			return null;
 		}
 	}
@@ -125,7 +141,7 @@ public class TigerStandardListener extends TigerBaseListener {
 		if (table.get(typeID) instanceof TigerType)
 			return (TigerType)table.get(typeID);
 		else  {
-			error(ctx, "'" + typeID + "' must be TypeID");
+			error(ctx, quote(typeID) + " must be TypeID");
 			return null;
 		}
 	}
@@ -166,7 +182,7 @@ public class TigerStandardListener extends TigerBaseListener {
 			TigerType lt = eval(ctx.expr(0));
 			TigerType rt = eval(ctx.expr(1));
 			if (!lt.equals(INTEGER)) {
-				error(ctx.expr(0), "Must be " + INTEGER);
+				error(ctx.expr(0), quote(ctx.expr(0)) + "Must be " + INTEGER);
 			}
 			if (!rt.equals(INTEGER)) {
 				error(ctx.expr(1), "Must be " + INTEGER);
@@ -180,16 +196,22 @@ public class TigerStandardListener extends TigerBaseListener {
 			ctx.GE() != null) {
 			TigerType lt = eval(ctx.expr(0));
 			TigerType rt = eval(ctx.expr(1));
-			// TODO: Nil
-			if (!lt.equals(rt)) {
-				error(ctx, "Cannot compare " + lt + " with " + rt);
+			if (lt instanceof TigerRecord && rt instanceof TigerRecord) {
+				boolean lnil = ((TigerRecord)lt).isNil();
+				boolean rnil = ((TigerRecord)rt).isNil();
+				if ((!lnil && rnil) || (lnil && !rnil)) {
+					// PASS
+				} else if (lnil && rnil){
+					warning(ctx, "Cannot compare " + lt + envelope(ctx.expr(0).getText()) + " with " + rt + envelope(ctx.expr(1).getText()));
+				} else if (!lt.equals(rt)) {
+					warning(ctx, "Cannot compare " + lt + envelope(ctx.expr(0).getText()) + " with " + rt + envelope(ctx.expr(1).getText()));
+				}
+			} else if (!lt.equals(rt)) {
+				warning(ctx, "Cannot compare " + lt + envelope(ctx.expr(0).getText()) + " with " + rt + envelope(ctx.expr(1).getText()));
 			} else if (lt instanceof TigerBoolean || rt instanceof TigerBoolean) {
 				warning(ctx, "Relation operators are not associative");
-				assign(ctx, BOOLEAN);
-			} else {
-				//PASS
-				assign(ctx, BOOLEAN);
 			}
+			assign(ctx, BOOLEAN);
 		} else if (ctx.NIL() != null) {
 			assign(ctx, NIL);
 		} else if (ctx.INT() != null) {
@@ -459,7 +481,7 @@ public class TigerStandardListener extends TigerBaseListener {
 		if (table.containsKey(rootKey) && table.get(rootKey) instanceof TigerVariable)
 			rootType = ((TigerVariable)table.get(rootKey)).getType();
 		else 
-			error(ctx, "'" rootKey + "' should be VARIABLE");
+			error(ctx, quote(rootKey) + " should be VARIABLE");
 		for (int i = 1; i < ctx.getChildCount(); i++) {
 			ParseTree parseTree = ctx.getChild(i);
 			if (parseTree instanceof TerminalNode) {
@@ -509,7 +531,10 @@ public class TigerStandardListener extends TigerBaseListener {
 			} else {
 				error(ctx, "Type and expr mismatch");
 			}
+		} else if (exprType == NIL) {
+			warning(ctx, "Cannot assign NIL to " + quote(ctx.ID().getText()));
 		} else {
+			// PASS
 			currentTable().put(ctx.ID().getText(), new TigerVariable(exprType));
 		}
 	}
@@ -524,13 +549,13 @@ public class TigerStandardListener extends TigerBaseListener {
 	@Override
 	public void exitTypeDec(TypeDecContext ctx) {
 		Map<String, TigerNamespace> table = visibleTable();
-		if (ctx.type().typeID() != ParserRuleContext.EMPTY) {
+		if (ctx.type().typeID() != null) {
 			TigerType type = getTypeOrError(ctx, table, ctx.type().typeID().getText());
 			currentTable().put(ctx.ID().getText(), type);
-		} else if (ctx.type().arrayType() != ParserRuleContext.EMPTY) {
+		} else if (ctx.type().arrayType() != null) {
 			TigerType array = new TigerArray(getTypeOrError(ctx, table, ctx.type().arrayType().typeID().getText()));
 			currentTable().put(ctx.ID().getText(), array);
-		} else if (ctx.type().recordType() != ParserRuleContext.EMPTY) {
+		} else if (ctx.type().recordType() != null) {
 			popTable();
 			TigerRecord record = new TigerRecord();
 			currentTable().put(ctx.ID().getText(), record);
@@ -579,7 +604,7 @@ public class TigerStandardListener extends TigerBaseListener {
 			TigerFunction primitiveFunction = (TigerFunction)currentTable().get(ctx.ID().getText());
 			if (primitiveFunction != null && primitiveFunction.isPrimitive()) {
 				if (!primitiveFunction.equals(function)) {
-					error(ctx, quote(function.toString()) + " is inconsistent with its primitive" + quote(primitiveFunction.toString()));
+					error(ctx, quote(function) + " is inconsistent with its primitive" + quote(primitiveFunction.toString()));
 				}
 			}
 		}

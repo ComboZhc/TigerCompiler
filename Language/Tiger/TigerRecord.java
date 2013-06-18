@@ -1,5 +1,6 @@
 package Language.Tiger;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -8,8 +9,8 @@ public class TigerRecord extends TigerType{
 	private boolean nil;
 	@Override
 	public String toString() {
-		if (this.elementTypes == null)
-			return "Record";
+		if (nil)
+			return "Nil";
 		else 
 			return "Record" + this.elementTypes;
 	}
@@ -26,7 +27,7 @@ public class TigerRecord extends TigerType{
 		this.nil = nil;
 	}
 	public TigerRecord() {
-		this.elementTypes = null;
+		this.elementTypes = new HashMap<String, TigerType>();
 		this.nil = false;
 	}
 	public TigerRecord(Map<String, TigerType> elementTypes, boolean nil) {
