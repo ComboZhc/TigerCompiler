@@ -2,6 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path=""/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="T:/antlrworks2/antlr-4.0-complete.jar"/>
+	<classpathentry kind="lib" path="C:/Users/xyh/Desktop/com/antlr-4.0-complete.jar"/>
 	<classpathentry kind="output" path=""/>
 </classpath>
