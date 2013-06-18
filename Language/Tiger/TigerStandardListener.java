@@ -541,7 +541,7 @@ public class TigerStandardListener extends TigerBaseListener {
 	
 	@Override
 	public void enterTypeDec(TypeDecContext ctx) {
-		if (ctx.type().recordType() != ParserRuleContext.EMPTY) {
+		if (ctx.type().recordType() != null) {
 			pushTable();
 		}
 	}
@@ -595,7 +595,7 @@ public class TigerStandardListener extends TigerBaseListener {
 			TigerType type = getTypeOrError(ctx, table, c.typeID().getText());
 			function.getParameterTypes().add(type);
 		}
-		if (ctx.typeID() != ParserRuleContext.EMPTY) {
+		if (ctx.typeID() != null) {
 			function.setReturnType(NOVALUE);
 		} else {
 			function.setReturnType(getTypeOrError(ctx, table, ctx.typeID().getText()));
@@ -631,7 +631,7 @@ public class TigerStandardListener extends TigerBaseListener {
 			TigerType type = getTypeOrError(ctx, table, c.typeID().getText());
 			function.getParameterTypes().add(type);
 		}		
-		if (ctx.typeID() != ParserRuleContext.EMPTY) {
+		if (ctx.typeID() != null) {
 			function.setReturnType(NOVALUE);
 		} else {
 			function.setReturnType(getTypeOrError(ctx, table, ctx.typeID().getText()));
