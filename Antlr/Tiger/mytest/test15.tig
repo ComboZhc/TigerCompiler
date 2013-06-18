@@ -1,0 +1,11 @@
+let
+	type mm = {a:int, b:string}
+	var a: mm := nil
+	var b: mm := nil
+in
+	a = b
+end
+
+/*
+Right!
+*/

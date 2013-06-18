@@ -1,0 +1,321 @@
+1
+<<<< Antlr/Tiger/mytest/test1.tig
+let
+in
+	123>"string";
+	"sdf"="123";
+	"ASdf"<=44
+end
+
+/*
+line 3,4,5  can't compare
+*/
+====
+line 3:1 WARNING: Cannot compare Integer(123) with String("string")
+line 5:1 WARNING: Cannot compare String("ASdf") with Integer(44)
+>>>>
+2
+<<<< Antlr/Tiger/mytest/test2.tig
+let
+	var a := nil
+in
+end
+
+/*
+line 2:  no type
+*/
+====
+line 2:1 ERROR: Cannot assign NIL to 'a'
+3
+<<<< Antlr/Tiger/mytest/test3.tig
+let
+	var a := 5
+	var b := "sdf"
+in
+	a = b
+end
+
+/*
+line 5: can't compare int with string
+*/
+====
+line 5:1 WARNING: Cannot compare Integer(a) with String(b)
+>>>>
+4
+<<<< Antlr/Tiger/mytest/test4.tig
+let
+	type fuck = int
+	var a:int := 5
+	var b:fuck := 7
+in
+	a = b
+end
+
+/*
+Right!
+*/
+====
+>>>>
+5
+<<<< Antlr/Tiger/mytest/test5.tig
+let
+	type a = b
+	type b = a
+in
+end
+
+/*
+line 3,4:  recursive type define.
+*/
+====
+line 2:1 ERROR: 'b' must be TypeID
+6
+<<<< Antlr/Tiger/mytest/test6.tig
+let
+	type a = { a:int,b:string }
+	var b:a := a{ a=5,b="dsf"}
+in
+end
+
+/*
+Right!
+*/
+====
+>>>>
+7
+<<<< Antlr/Tiger/mytest/test7.tig
+let
+	type a = { a:int,b:string }
+in
+	for a := 1 to 5 do
+		a := 7
+end
+
+/*
+line 5: a can not be assigned
+*/
+====
+line 5:2 WARNING: LOOP VARIABLE 'a' should not be assigned
+>>>>
+8
+<<<< Antlr/Tiger/mytest/test8.tig
+let
+	type ia = array of int
+	var a := ia [100] of 0
+in
+	a[5][5] := 9
+end
+
+/*
+line 5: a[] not a[][]
+*/
+====
+line 5:1 ERROR: 'a[5]' must be Array
+9
+<<<< Antlr/Tiger/mytest/test9.tig
+let
+	type ia = array of int
+	type ia2 = array of ia
+	var a := ia2[100] of ia[100] of 0
+in
+	a[5][5] := 9
+end
+
+/*
+/Right!
+*/
+====
+>>>>
+10
+<<<< Antlr/Tiger/mytest/test10.tig
+let
+	var a : string := "ggg"
+	var b : int := 99
+	function f(a:string, b:int):int = a
+in
+	f(b,a)
+end
+
+/*
+line 4: return val is int not string
+line 6: type of params are wrong
+*/
+====
+line 4:1 WARNING: FUNCTION[String, Integer]:Integer(f) does not have a correct return type
+line 6:1 WARNING: FUNCTION[String, Integer]:Integer(f) is not applicable for the arguments[Integer, String]
+>>>>
+11
+<<<< Antlr/Tiger/mytest/test11.tig
+let
+	var a : string := "ggg"
+	var b : int := 99
+	function f(a:string, b:int):int = f(a,b)
+in
+	f(b,a,b)
+end
+
+/*
+line 6: number of params is not matched
+*/
+====
+line 6:1 WARNING: FUNCTION[String, Integer]:Integer(f) is not applicable for the arguments[Integer, String, Integer]
+>>>>
+12
+<<<< Antlr/Tiger/mytest/test12.tig
+let
+in
+	getchar()
+end
+
+/*
+Right!
+*/
+====
+>>>>
+13
+<<<< Antlr/Tiger/mytest/test13.tig
+let
+	type a = { a:int,b:string }
+	var b:a := a{ a=5,b="dsf", c="Sdf"}
+in
+end
+
+/*
+line 3: c is not matched
+*/
+====
+line 3:12 WARNING: Record init fields mismatch
+>>>>
+14
+<<<< Antlr/Tiger/mytest/test14.tig
+let
+in
+	123 := 456;
+	"dsf" := "ccc"
+end
+
+/*
+line 3,4: wrong
+*/
+====
+>>>>
+15
+<<<< Antlr/Tiger/mytest/test15.tig
+let
+	type mm = {a:int, b:string}
+	var a: mm := nil
+	var b: mm := nil
+in
+	a = b
+end
+
+/*
+Right!
+*/
+====
+>>>>
+16
+<<<< Antlr/Tiger/mytest/test16.tig
+let
+	type b = {c:int}
+	type a = {a:b}
+	var m : a := nil
+	var k : string := "sdd"
+in
+	m.a.c := k
+end
+
+/*
+line 6: type not matched
+*/
+====
+line 7:1 ERROR: Type mismatch
+17
+<<<< Antlr/Tiger/mytest/test17.tig
+let
+	var a:int := 0
+	var b:int := 0
+	var c:int := 0
+in
+	a:=(b:=c)+9
+end
+
+/*
+line 6: assign op can not generate val
+*/
+====
+line 6:4 WARNING: Expr((b:=c)) must be Integer
+>>>>
+18
+<<<< Antlr/Tiger/mytest/test18.tig
+let
+	type k = { a:int,b:string }
+	var a : k := nil
+in
+	a.c = "sdfd";
+	a.b = 5
+end
+
+/*
+line 5: has no attr c
+line 6: a.b is string, not an int
+*/
+====
+line 5:1 ERROR: Record field 'c' does not exist
+19
+<<<< Antlr/Tiger/mytest/test19.tig
+let
+	function f1(a:int, b:string):int = a
+	function f2(a:string, b:int):string = a
+in
+	f1(f2("dd",4),f2("vv","aa"))
+end
+
+/*
+line 3: f1  first param is int
+line 3: f2  second param is int
+*/
+====
+line 5:15 WARNING: FUNCTION[String, Integer]:String(f2) is not applicable for the arguments[String, String]
+line 5:1 WARNING: FUNCTION[Integer, String]:Integer(f1) is not applicable for the arguments[String, String]
+>>>>
+20
+<<<< Antlr/Tiger/mytest/test20.tig
+let
+	var a := 5
+	var b := "sdf"
+in
+	for c := a to b do a := 1
+end
+
+/*
+line 5: b is not int
+line 5: a := b wrong
+*/
+====
+line 5:15 ERROR: Upperbound 'b' should be Integer
+21
+<<<< Antlr/Tiger/mytest/test21.tig
+let
+    type a = int
+    type b = int
+    var a := 1
+    var b := 2
+in
+    a = b /* OK */
+end
+====
+>>>>
+22
+<<<< Antlr/Tiger/mytest/test22.tig
+let
+    type a = {foo : int}
+    type b = {foo : int}
+    var va := a{foo = 1}
+    var vb := b{foo = 2}
+in
+    va = vb /* invalid */   
+end
+====
+line 7:4 WARNING: Cannot compare Record{foo=Integer}(va) with Record{foo=Integer}(vb)
+>>>>

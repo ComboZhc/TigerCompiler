@@ -1,0 +1,12 @@
+let
+	var a : string := "ggg"
+	var b : int := 99
+	function f(a:string, b:int):int = a
+in
+	f(b,a)
+end
+
+/*
+line 4: return val is int not string
+line 6: type of params are wrong
+*/

@@ -1,0 +1,10 @@
+let
+	var a := 5
+	var b := "sdf"
+in
+	a = b
+end
+
+/*
+line 5: can't compare int with string
+*/
