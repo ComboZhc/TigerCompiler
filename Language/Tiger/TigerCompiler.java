@@ -11,6 +11,10 @@ public class TigerCompiler {
 		TigerLexer lexer = new TigerLexer(input);
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		TigerParser parser = new TigerParser(tokens);
+		
+		parser.removeErrorListeners();
+		parser.addErrorListener(new TigerErrorListener());
+		
 		ParseTree tree = parser.program();
 		ParseTreeWalker walker = new ParseTreeWalker();
 		walker.walk(new TigerStandardListener(), tree);
