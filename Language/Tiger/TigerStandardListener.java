@@ -1,5 +1,10 @@
 package Language.Tiger;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -8,10 +13,13 @@ import java.util.Map;
 
 import javax.swing.text.html.CSS;
 
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.stringtemplate.v4.compiler.CodeGenerator.includeExpr_return;
 import org.stringtemplate.v4.compiler.STParser.andConditional_return;
@@ -22,6 +30,7 @@ import com.sun.org.apache.xpath.internal.functions.Function;
 import com.sun.org.apache.xpath.internal.operations.Variable;
 
 import Antlr.Tiger.TigerBaseListener;
+import Antlr.Tiger.TigerLexer;
 import Antlr.Tiger.TigerParser;
 import Antlr.Tiger.TigerParser.ArrayInitializerContext;
 import Antlr.Tiger.TigerParser.AssignExprContext;
@@ -150,6 +159,43 @@ public class TigerStandardListener extends TigerBaseListener {
 		}
 	}
 	
+	
+	public List<Map<String, TigerNamespace>> getTables() {
+		return this.tables;
+	}
+	
+	private void importTables(ParserRuleContext ctx, String path) {
+		ANTLRInputStream input = null;
+		
+		String p = path.replace("\"", "");
+//		System.out.println(p);
+		try {
+			input = new ANTLRInputStream(new FileInputStream(p));
+		} catch (FileNotFoundException ex) {
+			error(ctx,"not found the import file!");
+		}
+		catch (Exception ex) {
+			
+		}
+		TigerLexer lexer = new TigerLexer(input);
+		CommonTokenStream tokens = new CommonTokenStream(lexer);
+		TigerParser parser = new TigerParser(tokens);
+		
+		parser.removeErrorListeners();
+		parser.addErrorListener(new TigerErrorListener());
+		
+		ParseTree tree = parser.program();
+
+		ParseTreeWalker walker = new ParseTreeWalker();
+		TigerStandardListener tsl = new TigerStandardListener();
+		walker.walk(tsl, tree);
+		
+		List<Map<String, TigerNamespace>> table = tsl.getTables();
+		for (int i = 0; i < table.size(); ++i) {
+			this.tables.add(table.get(i));
+		}
+	}
+	
 	@Override
 	public void enterProgram(ProgramContext ctx) {
 		pushTable();
@@ -173,7 +219,7 @@ public class TigerStandardListener extends TigerBaseListener {
 	
 	@Override
 	public void exitProgram(ProgramContext ctx) {
-		popTable();
+//		popTable();
 	}
 	
 	@Override
@@ -682,7 +728,7 @@ public class TigerStandardListener extends TigerBaseListener {
 	
 	@Override
 	public void exitImportDec(ImportDecContext ctx) {
-		// TODO : Merge symbol tables
+		this.importTables(ctx, ctx.STRING().getText());
 	}
 	
 	@Override 
