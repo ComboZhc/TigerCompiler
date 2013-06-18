@@ -121,6 +121,9 @@ public class TigerBaseListener implements TigerListener {
 	@Override public void enterForID(TigerParser.ForIDContext ctx) { }
 	@Override public void exitForID(TigerParser.ForIDContext ctx) { }
 
+	@Override public void enterFuncBody(TigerParser.FuncBodyContext ctx) { }
+	@Override public void exitFuncBody(TigerParser.FuncBodyContext ctx) { }
+
 	@Override public void enterForExpr(TigerParser.ForExprContext ctx) { }
 	@Override public void exitForExpr(TigerParser.ForExprContext ctx) { }
 

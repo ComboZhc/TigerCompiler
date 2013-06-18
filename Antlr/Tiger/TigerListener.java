@@ -118,6 +118,9 @@ public interface TigerListener extends ParseTreeListener {
 	void enterForID(TigerParser.ForIDContext ctx);
 	void exitForID(TigerParser.ForIDContext ctx);
 
+	void enterFuncBody(TigerParser.FuncBodyContext ctx);
+	void exitFuncBody(TigerParser.FuncBodyContext ctx);
+
 	void enterForExpr(TigerParser.ForExprContext ctx);
 	void exitForExpr(TigerParser.ForExprContext ctx);
 }

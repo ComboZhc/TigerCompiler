@@ -1,0 +1,10 @@
+let
+	type ia = array of int
+	var a := ia [100] of 0
+in
+	a[5][5] := 9
+end
+
+/*
+line 5: a[] not a[][]
+*/

@@ -1,12 +1,12 @@
 package Language.Tiger;
 
-public class TigerNoValue extends TigerType {
+public class TigerVoid extends TigerType {
 	@Override
 	public String toString() {
-		return "NoValue";
+		return "Void";
 	}	
 	@Override
 	public boolean equals(Object o) {
-		return o instanceof TigerNoValue;
+		return o instanceof TigerVoid;
 	}
 }

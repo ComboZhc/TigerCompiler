@@ -1,0 +1,10 @@
+let
+	type a = { a:int,b:string }
+in
+	for a := 1 to 5 do
+		a := 7
+end
+
+/*
+line 5: a can not be assigned
+*/

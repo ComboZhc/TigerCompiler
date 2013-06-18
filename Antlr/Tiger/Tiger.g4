@@ -54,8 +54,10 @@ dec : typeDec
 varDec : VAR ID (COLON typeID)? ASSIGN expr;
 typeDec : TYPE ID EQ type;
 classDec : CLASS ID (EXTENDS ID)? LBCE classFields RBCE;
-funcDec : FUNCTION ID LPAR typeFields RPAR (COLON typeID)? EQ expr;
-primitiveDec : PRIMITIVE ID LPAR typeFields RPAR (COLON typeID)?;
+funcDec : FUNCTION ID LPAR typeFields RPAR (COLON typeID)? EQ funcBody;
+methodDec : METHOD ID LPAR typeFields RPAR (COLON typeID)? EQ funcBody;
+funcBody : expr;
+primitiveDec : PRIMITIVE ID LPAR typeFields RPAR (COLON typeID)? ;
 importDec : IMPORT STRING;
 
 type : typeID
@@ -70,7 +72,6 @@ typeID : ID;
 classFields : classField* ;
 classField : varDec
     | methodDec;
-methodDec : METHOD ID LPAR typeFields RPAR (COLON typeID)? EQ expr;
 
 COMMENT: '/*' (COMMENT | ~('*'|'/') | '*'~'/' | '/'~'*')*? '*/' -> skip;
 STRING: '"' (SLASH | ~'\\')*? '"';

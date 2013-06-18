@@ -1,0 +1,11 @@
+let
+	var a := 5
+	var b := "sdf"
+in
+	for c := a to b do a := 1
+end
+
+/*
+line 5: b is not int
+line 5: a := b wrong
+*/
