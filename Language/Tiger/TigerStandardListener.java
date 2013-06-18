@@ -71,12 +71,16 @@ public class TigerStandardListener extends TigerBaseListener {
 		this.values = new ParseTreeProperty<TigerType>();
 	}
 
+	private String quote(String string) {
+		return "'" + string + "'";
+	}
+	
 	private void warning(ParserRuleContext ctx, String msg) {
-		System.out.println("W@L" + "1" + msg);
+		System.out.println("Warning@[" + ctx.getText() + "]" + msg);
 	}
 	
 	private void error(ParserRuleContext ctx, String msg) {
-		System.out.println(msg);
+		System.out.println("Error@[" + ctx.getText() + "]" + msg);
 	}
 	
 	private TigerType eval(ParserRuleContext ctx) {
@@ -310,6 +314,9 @@ public class TigerStandardListener extends TigerBaseListener {
 		if (lt.equals(rt)) {
 			// PASS
 			assign(ctx, NOVALUE);
+		} else if (rt instanceof TigerRecord
+			&& (((TigerRecord)rt).isNil()) 
+			&& (lt instanceof TigerRecord)) {
 		} else {
 			error(ctx, "Type mismatch");
 		}
@@ -451,6 +458,8 @@ public class TigerStandardListener extends TigerBaseListener {
 		String path = rootKey;
 		if (table.containsKey(rootKey) && table.get(rootKey) instanceof TigerVariable)
 			rootType = ((TigerVariable)table.get(rootKey)).getType();
+		else 
+			error(ctx, "'" rootKey + "' should be VARIABLE");
 		for (int i = 1; i < ctx.getChildCount(); i++) {
 			ParseTree parseTree = ctx.getChild(i);
 			if (parseTree instanceof TerminalNode) {
@@ -482,7 +491,7 @@ public class TigerStandardListener extends TigerBaseListener {
 						error(ctx, "Indices must be " + INTEGER);
 					}
 				} else {
-					error(ctx, "'" + path + "' must be " + ARRAY);
+					error(ctx,  quote(path) + " must be " + ARRAY);
 				}
 			}
 		}
@@ -570,7 +579,7 @@ public class TigerStandardListener extends TigerBaseListener {
 			TigerFunction primitiveFunction = (TigerFunction)currentTable().get(ctx.ID().getText());
 			if (primitiveFunction != null && primitiveFunction.isPrimitive()) {
 				if (!primitiveFunction.equals(function)) {
-					error(ctx, function + " is inconsistent with its primitive");
+					error(ctx, quote(function.toString()) + " is inconsistent with its primitive" + quote(primitiveFunction.toString()));
 				}
 			}
 		}
