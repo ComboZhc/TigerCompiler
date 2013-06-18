@@ -1,0 +1,8 @@
+let
+in
+	getchar()
+end
+
+/*
+Right!
+*/

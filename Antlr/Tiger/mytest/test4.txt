@@ -1,0 +1,11 @@
+let
+	type fuck = int
+	var a:int := 5
+	var b:fuck := 7
+in
+	a = b
+end
+
+/*
+Right!
+*/

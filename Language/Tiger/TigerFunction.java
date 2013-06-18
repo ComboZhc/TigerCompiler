@@ -1,17 +1,11 @@
 package Language.Tiger;
+import java.util.LinkedList;
 import java.util.List;
 
 
 public class TigerFunction extends TigerNamespace{
 	private List<TigerType> parameterTypes;
 	private TigerType returnType;
-	private boolean primitive;
-	public boolean isPrimitive() {
-		return primitive;
-	}
-	public void setPrimitive(boolean primitive) {
-		this.primitive = primitive;
-	}
 	public List<TigerType> getParameterTypes() {
 		return parameterTypes;
 	}
@@ -25,18 +19,16 @@ public class TigerFunction extends TigerNamespace{
 		this.returnType = returnType;
 	}
 	public TigerFunction() {
-		this.parameterTypes = null;
+		this.parameterTypes = new LinkedList<TigerType>();
 		this.returnType = null;
-		this.primitive = false;
 	}
-	public TigerFunction(List<TigerType> parameterTypes, TigerType returnType, boolean primitive) {
+	public TigerFunction(List<TigerType> parameterTypes, TigerType returnType) {
 		this.parameterTypes = parameterTypes;
 		this.returnType = returnType;
-		this.primitive = primitive;
 	}
 	@Override
 	public String toString() {
-		return "FUNCTION" + parameterTypes + "->" + returnType;
+		return "FUNCTION" + parameterTypes + ":" + returnType;
 	}
 	@Override
 	public boolean equals(Object o) {
