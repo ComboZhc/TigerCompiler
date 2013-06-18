@@ -24,7 +24,6 @@ public class TigerRecord extends TigerType{
 	}
 	@Override
 	public boolean equals(Object o) {
-		return o instanceof TigerRecord
-		  && elementTypes.equals(((TigerRecord)o).elementTypes);
+		return this == o;
 	}
 }

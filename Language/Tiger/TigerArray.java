@@ -22,7 +22,6 @@ public class TigerArray extends TigerType{
 	}
 	@Override
 	public boolean equals(Object o) {
-		return o instanceof TigerArray 
-			&& elementType.equals(((TigerArray)o).getElementType());
+		return this == o;
 	}
 }

@@ -1,9 +1,0 @@
-let
-	type a = { a:int,b:string }
-	var b:a := a{ a=5,b="dsf", c="Sdf"}
-in
-end
-
-/*
-line 3: c is not matched
-*/

@@ -1,9 +1,0 @@
-let
-in
-	123 := 456;
-	"dsf" := "ccc"
-end
-
-/*
-line 3,4: wrong
-*/

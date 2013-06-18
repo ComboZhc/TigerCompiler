@@ -40,6 +40,9 @@ public interface TigerListener extends ParseTreeListener {
 	void enterInitFields(TigerParser.InitFieldsContext ctx);
 	void exitInitFields(TigerParser.InitFieldsContext ctx);
 
+	void enterParameterFields(TigerParser.ParameterFieldsContext ctx);
+	void exitParameterFields(TigerParser.ParameterFieldsContext ctx);
+
 	void enterIfExpr(TigerParser.IfExprContext ctx);
 	void exitIfExpr(TigerParser.IfExprContext ctx);
 

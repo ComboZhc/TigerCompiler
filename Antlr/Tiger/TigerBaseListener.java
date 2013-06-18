@@ -43,6 +43,9 @@ public class TigerBaseListener implements TigerListener {
 	@Override public void enterInitFields(TigerParser.InitFieldsContext ctx) { }
 	@Override public void exitInitFields(TigerParser.InitFieldsContext ctx) { }
 
+	@Override public void enterParameterFields(TigerParser.ParameterFieldsContext ctx) { }
+	@Override public void exitParameterFields(TigerParser.ParameterFieldsContext ctx) { }
+
 	@Override public void enterIfExpr(TigerParser.IfExprContext ctx) { }
 	@Override public void exitIfExpr(TigerParser.IfExprContext ctx) { }
 

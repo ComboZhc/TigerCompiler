@@ -1,8 +1,0 @@
-let
-	var a := nil
-in
-end
-
-/*
-line 2:  no type
-*/

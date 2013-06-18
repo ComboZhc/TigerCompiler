@@ -24,6 +24,7 @@ import com.sun.org.apache.xpath.internal.operations.Variable;
 import Antlr.Tiger.TigerBaseListener;
 import Antlr.Tiger.TigerParser;
 import Antlr.Tiger.TigerParser.ArrayInitializerContext;
+import Antlr.Tiger.TigerParser.ArrayTypeContext;
 import Antlr.Tiger.TigerParser.AssignExprContext;
 import Antlr.Tiger.TigerParser.BreakExprContext;
 import Antlr.Tiger.TigerParser.ClassDecContext;
@@ -47,9 +48,11 @@ import Antlr.Tiger.TigerParser.MethodDecContext;
 import Antlr.Tiger.TigerParser.MethodExprContext;
 import Antlr.Tiger.TigerParser.NegateExprContext;
 import Antlr.Tiger.TigerParser.NewExprContext;
+import Antlr.Tiger.TigerParser.ParameterFieldsContext;
 import Antlr.Tiger.TigerParser.PrimitiveDecContext;
 import Antlr.Tiger.TigerParser.ProgramContext;
 import Antlr.Tiger.TigerParser.RecordInitializerContext;
+import Antlr.Tiger.TigerParser.RecordTypeContext;
 import Antlr.Tiger.TigerParser.SequenceExprContext;
 import Antlr.Tiger.TigerParser.TypeContext;
 import Antlr.Tiger.TigerParser.TypeDecContext;
@@ -200,10 +203,10 @@ public class TigerStandardListener extends TigerBaseListener {
 			TigerType lt = eval(ctx.expr(0));
 			TigerType rt = eval(ctx.expr(1));
 			if (!lt.equals(INTEGER)) {
-				warning(ctx.expr(0), quote(ctx.expr(0).getText()) + " must be " + INTEGER);
+				warning(ctx.expr(0), "Expr" + envelope(ctx.expr(0).getText()) + " must be " + INTEGER);
 			}
 			if (!rt.equals(INTEGER)) {
-				warning(ctx.expr(1), quote(ctx.expr(1).getText()) + " must be " + INTEGER);
+				warning(ctx.expr(1), "Expr" + envelope(ctx.expr(1).getText()) + " must be " + INTEGER);
 			}
 			assign(ctx, INTEGER);
 		} else if (ctx.EQ() != null ||
@@ -287,7 +290,7 @@ public class TigerStandardListener extends TigerBaseListener {
 				assign(ctx, arr);
 			}
 		} else {
-			error(ctx, "'" + typeID + "' is not " + ARRAY);
+			error(ctx, quote(typeID) + " is not " + ARRAY);
 		}
 	}
 
@@ -313,7 +316,7 @@ public class TigerStandardListener extends TigerBaseListener {
 				assign(ctx, record);
 			}
 		} else {
-			error(ctx, "'" + typeID + "' is not " + RECORD);
+			error(ctx, quote(typeID) + " is not " + RECORD);
 		}
 	}
 	
@@ -334,7 +337,7 @@ public class TigerStandardListener extends TigerBaseListener {
 			// PASS
 			assign(ctx, INTEGER);
 		} else {
-			error(ctx.expr(), quote(ctx.expr()) + " must be " + INTEGER);
+			error(ctx.expr(), "Expr" + envelope(ctx.expr()) + " must be " + INTEGER);
 		}
 	}
 	
@@ -350,6 +353,10 @@ public class TigerStandardListener extends TigerBaseListener {
 	
 	@Override
 	public void exitAssignExpr(AssignExprContext ctx) {
+		Map<String, TigerNamespace> table = visibleTable();
+		if (table.get(ctx.lvalue().getText()) instanceof TigerLoopVariable) {
+			warning(ctx, "LOOP VARIABLE " + quote(ctx.lvalue().getText()) + " should not be assigned");
+		}
 		TigerType lt = eval(ctx.lvalue());
 		TigerType rt = eval(ctx.expr());
 		if (lt.equals(rt)) {
@@ -379,11 +386,9 @@ public class TigerStandardListener extends TigerBaseListener {
 		
 		TigerFunction func = getFunctionOrError(ctx, table, funcID);
 		if (!func.getParameterTypes().equals(parameters)) {
-			error(ctx, quote(func) + " is not applicable for the arguments" + parameters);
-		} else {
-			// PASS
-			assign(ctx, func.getReturnType());
+			warning(ctx, func + envelope(funcID) + " is not applicable for the arguments" + parameters);
 		}
+		assign(ctx, func.getReturnType());
 	}
 	
 	@Override
@@ -497,9 +502,6 @@ public class TigerStandardListener extends TigerBaseListener {
 		TigerType rootType = null;
 		String path = rootKey;
 		if (table.containsKey(rootKey) && table.get(rootKey) instanceof TigerVariable) {
-			if (table.get(rootKey) instanceof TigerLoopVariable) {
-				warning(ctx, "LOOP VARIABLE " + quote(rootKey) + " should not be LVALUE");
-			}
 			rootType = ((TigerVariable)table.get(rootKey)).getType();
 		} else { 
 			error(ctx, quote(rootKey) + " should be VARIABLE");
@@ -564,31 +566,37 @@ public class TigerStandardListener extends TigerBaseListener {
 	}
 	
 	@Override
-	public void enterTypeDec(TypeDecContext ctx) {
-		if (ctx.type().recordType() != null) {
-			pushTable();
-		}
-	}
-	
-	@Override
 	public void exitTypeDec(TypeDecContext ctx) {
 		Map<String, TigerNamespace> table = visibleTable();
 		if (ctx.type().typeID() != null) {
 			TigerType type = getTypeOrError(ctx, table, ctx.type().typeID().getText());
 			currentTable().put(ctx.ID().getText(), type);
-		} else if (ctx.type().arrayType() != null) {
-			TigerType array = new TigerArray(getTypeOrError(ctx, table, ctx.type().arrayType().typeID().getText()));
-			currentTable().put(ctx.ID().getText(), array);
-		} else if (ctx.type().recordType() != null) {
-			popTable();
-			TigerRecord record = new TigerRecord();
-			currentTable().put(ctx.ID().getText(), record);
-			List<TypeFieldContext> typeFields = ctx.type().recordType().typeFields().typeField();
-			for (TypeFieldContext c : typeFields) {
-				String fieldString = c.ID().getText();
-				TigerType fieldType = getTypeOrError(ctx, table, c.typeID().getText());
-				record.getElementTypes().put(fieldString, fieldType);
-			}
+		}
+	}
+	
+	@Override
+	public void exitArrayType(ArrayTypeContext ctx) {
+		Map<String, TigerNamespace> table = visibleTable();
+		TigerType array = new TigerArray(getTypeOrError(ctx, table, ctx.typeID().getText()));
+		currentTable().put(((TypeDecContext)ctx.getParent().getParent()).ID().getText(), array);
+	}
+	
+	@Override
+	public void enterRecordType(RecordTypeContext ctx) {
+		Map<String, TigerNamespace> table = visibleTable();
+		TigerRecord record = new TigerRecord();
+		currentTable().put(((TypeDecContext)ctx.getParent().getParent()).ID().getText(), record);
+	}
+	
+	@Override
+	public void exitRecordType(RecordTypeContext ctx) {
+		Map<String, TigerNamespace> table = visibleTable();
+		TigerRecord record = (TigerRecord)currentTable().get(((TypeDecContext)ctx.getParent().getParent()).ID().getText());
+		List<TypeFieldContext> typeFields = ctx.typeFields().typeField();
+		for (TypeFieldContext c : typeFields) {
+			String fieldString = c.ID().getText();
+			TigerType fieldType = getTypeOrError(ctx, table, c.typeID().getText());
+			record.getElementTypes().put(fieldString, fieldType);
 		}
 	}
 	
@@ -633,7 +641,7 @@ public class TigerStandardListener extends TigerBaseListener {
 		FuncDecContext parentContext = (FuncDecContext)ctx.getParent();
 		Map<String, TigerNamespace> table = visibleTable();
 		TigerFunction function = new TigerFunction();
-		List<TypeFieldContext> typeFields = parentContext.typeFields().typeField();
+		List<TypeFieldContext> typeFields = parentContext.parameterFields().typeField();
 		for (TypeFieldContext c : typeFields) {
 			TigerType type = getTypeOrError(parentContext, table, c.typeID().getText());
 			function.getParameterTypes().add(type);
@@ -646,7 +654,7 @@ public class TigerStandardListener extends TigerBaseListener {
 		if (currentTable().get(parentContext.ID().getText()) instanceof TigerPrimitiveFunction) {
 			TigerPrimitiveFunction primitiveFunction = (TigerPrimitiveFunction)currentTable().get(parentContext.ID().getText());
 			if (!primitiveFunction.equals(function)) {
-				error(parentContext, quote(function) + " inconsistent with its primitive" + quote(primitiveFunction.toString()));
+				error(parentContext, function + envelope(parentContext.ID().getText()) + " inconsistent with its primitive" + quote(primitiveFunction.toString()));
 			}
 		}
 		currentTable().put(parentContext.ID().getText(), function);
@@ -658,7 +666,7 @@ public class TigerStandardListener extends TigerBaseListener {
 		Map<String, TigerNamespace> table = visibleTable();
 		TigerFunction function = (TigerFunction)getFunctionOrError(ctx, table, parentContext.ID().getText());
 		if (!function.getReturnType().equals(eval(ctx.expr()))) {
-			warning(parentContext, quote(function) + " does not have a correct return type");
+			warning(parentContext, function + envelope(parentContext.ID().getText())+ " does not have a correct return type");
 		}
 		assign(ctx, eval(ctx.expr()));
 	}
@@ -667,7 +675,7 @@ public class TigerStandardListener extends TigerBaseListener {
 	public void exitPrimitiveDec(PrimitiveDecContext ctx) {
 		Map<String, TigerNamespace> table = visibleTable();
 		TigerPrimitiveFunction function = new TigerPrimitiveFunction();
-		List<TypeFieldContext> typeFields = ctx.typeFields().typeField();
+		List<TypeFieldContext> typeFields = ctx.parameterFields().typeField();
 		for (TypeFieldContext c : typeFields) {
 			TigerType type = getTypeOrError(ctx, table, c.typeID().getText());
 			function.getParameterTypes().add(type);
@@ -686,7 +694,7 @@ public class TigerStandardListener extends TigerBaseListener {
 	}
 	
 	@Override 
-	public void exitTypeFields(TypeFieldsContext ctx) {
+	public void exitParameterFields(ParameterFieldsContext ctx) {
 		Map<String, TigerNamespace> table = visibleTable();
 		List<TypeFieldContext> typeFields = ctx.typeField();
 		for (TypeFieldContext c : typeFields) {

@@ -21,23 +21,11 @@ public class TigerErrorListener extends BaseErrorListener {
 	Object offendingSymbol,
 	int line, int charPositionInLine,
 	String msg,
-	RecognitionException e) 
-	{
+	RecognitionException e) {
 		List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
 		Collections.reverse(stack);
 		System.err.println("rule stack: "+stack);
 		System.err.println("line "+line+":"+charPositionInLine+" at "+
 				offendingSymbol+": "+msg);
-	
-/*		StringBuilder buf = new StringBuilder();
-		JDialog dialog = new JDialog();
-		Container contentPane = dialog.getContentPane();
-		contentPane.add(new JLabel(buf.toString()));
-		contentPane.setBackground(Color.white);
-		dialog.setTitle("Syntax error");
-		dialog.pack();
-		dialog.setLocationRelativeTo(null);
-		dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		dialog.setVisible(true);*/
 	}
 }
