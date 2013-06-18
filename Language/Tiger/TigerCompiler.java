@@ -16,7 +16,7 @@ public class TigerCompiler {
 		parser.addErrorListener(new TigerErrorListener());
 		
 		ParseTree tree = parser.program();
-		ParseTreeWalker walker = new ParseTreeWalker();
-		walker.walk(new TigerStandardListener(), tree);
+//		ParseTreeWalker walker = new ParseTreeWalker();
+//		walker.walk(new TigerStandardListener(), tree);
 	}
 }
